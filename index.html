@@ -12,6 +12,44 @@ html,body{
 	overflow:hidden;
 	background:#000;
 }
+
+#start-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 10000;
+    color: white;
+    font-size: 72px;
+    font-family: 'Avenir', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    text-align: center;
+}
+
+#start-screen img {
+    max-width: 300px; /* 设置图片最大宽度 */
+    margin-bottom: 20px; /* 图片与文本间距 */
+}
+
+#start-button {
+    margin-top: 20px;
+    padding: 30px 75px;
+    font-size: 48px;
+    color: white;
+    background-color: #444;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#start-button:hover {
+    background-color: #666;
+}
+
 </style>
 
 </head>
@@ -20,10 +58,15 @@ html,body{
 <canvas id="canvas" style="position:absolute;width:100%;height:100%;z-index:8888"></canvas>
 <canvas style="position:absolute;width:100%;height:100%;z-index:9999" class="canvas" ></canvas>
 
-<audio id="bg-music" loop>
-  <source src="your-audio-file.mp3" type="audio/mpeg">
-  您的浏览器不支持音频播放。
+<audio id="bg-music" >
+  <source src="my-audio-file2.mp3" type="audio/mpeg">
 </audio>
+
+<div id="start-screen">
+    <img src="my-image-file.jpeg" alt="准备图片">
+    <div id="start-message">准备好了吗？</div>
+    <button id="start-button">开始</button>
+</div>
 	
 <div class="overlay">
   <div class="tabs">
@@ -35,42 +78,63 @@ html,body{
     </div>
   </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const bgMusic = document.getElementById("bg-music");
-    bgMusic.play().catch(() => {
-        document.body.addEventListener('click', () => {
-            bgMusic.play();
-        }, { once: true });
+    const startButton = document.getElementById("start-button");
+    const startScreen = document.getElementById("start-screen");
+
+    // 设置初始动画文本
+    S.ShapeBuilder.letter('准备好了吗？');
+
+    startButton.addEventListener('click', () => {
+        startScreen.style.display = 'none';  // 隐藏开始界面
+        bgMusic.play().catch(err => console.error('无法播放音乐:', err));
+        S.UI.simulate('|#countdown 5||祝|丁|婧|生|日|快|乐|记|得|每|天|要|开|心|!|#rectangle|');
     });
 });
-	
-function initVars(){
 
-	pi=Math.PI;
-	ctx=document.getElementById("canvas").getContext("2d");
-	canvas.width=canvas.clientWidth;
-	canvas.height=canvas.clientHeight;
-	cx=canvas.width/2;
-	cy=canvas.height/2;
-	playerZ=-25;
-	playerX=playerY=playerVX=playerVY=playerVZ=pitch=yaw=pitchV=yawV=0;
-	scale=600;
-	seedTimer=0;seedInterval=5,seedLife=100;gravity=.02;
-	seeds=[];
-	sparkPics=[];
-	s="https://cantelope.org/NYE/";
-	for(i=1;i<=10;++i){
-		sparkPic=new Image();
-		sparkPic.src=s+"spark"+i+".png";
-		sparkPics.push(sparkPic);
-	}
-	sparks=new Array();
-	pow1=new Audio(s+"pow1.ogg");
-	pow2=new Audio(s+"pow2.ogg");
-	pow3=new Audio(s+"pow3.ogg");
-	pow4=new Audio(s+"pow4.ogg");
-	frames = 0;
+function startAnimation() {
+    // 初始化和启动动画逻辑
+    initVars();
+    frame();
+    
+    // 初始化 S 相关函数
+    S.init();
+}
+	
+function initVars() {
+    pi = Math.PI;
+    const canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d");
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    cx = canvas.width / 2;
+    cy = canvas.height / 2;
+    playerZ = -25;
+    playerX = playerY = playerVX = playerVY = playerVZ = 0;
+    pitch = yaw = pitchV = yawV = 0;
+    scale = 600;
+    seedTimer = 0;
+    seedInterval = 5;
+    seedLife = 100;
+    gravity = 0.02;
+    seeds = [];
+    sparkPics = [];
+    s = "https://cantelope.org/NYE/";
+    
+    for (let i = 1; i <= 10; ++i) {
+        const sparkPic = new Image();
+        sparkPic.src = s + "spark" + i + ".png";
+        sparkPics.push(sparkPic);
+    }
+    sparks = [];
+    pow1 = new Audio(s + "pow1.ogg");
+    pow2 = new Audio(s + "pow2.ogg");
+    pow3 = new Audio(s + "pow3.ogg");
+    pow4 = new Audio(s + "pow4.ogg");
+    frames = 0;
 }
 
 function rasterizePoint(x,y,z){
@@ -338,23 +402,17 @@ window.onload = function() {
 
 
 var S = {
-  init: function () {
-    var action = window.location.href,
-      i = action.indexOf('?a=');
+    init: function() {
+        var action = window.location.href,
+            i = action.indexOf('?a=');
 
-    S.Drawing.init('.canvas');
-    document.body.classList.add('body--ready');
+        S.Drawing.init('.canvas');
+        document.body.classList.add('body--ready');
 
-    if (i !== -1) {
-      S.UI.simulate(decodeURI(action).substring(i + 3));
-    } else {
-      S.UI.simulate('|#countdown 5||祝|丁|婧|生|日|快|乐|记|得|每|天|要|开|心|!|#rectangle|');
+        S.Drawing.loop(function() {
+            S.Shape.render();
+        });
     }
-
-    S.Drawing.loop(function () {
-      S.Shape.render();
-    });
-  }
 };
 
 let audio = document.querySelector('audio')
